@@ -1,170 +1,90 @@
-# Импортируем библиотеки
-import requests
+import re
+import requests, aiohttp
 from bs4 import BeautifulSoup
 
 
 class RealtParser:
     @staticmethod
-    def objects_url_parser(url):
-        url = "https://realt.by/belarus/sale/flats/?agencyUuids=01036310-5165-11ee-9a2f-abc708f86719&page=1&seller=false"
-        response = requests.get(url)
-        html = response.text
-        soup = BeautifulSoup(html, "html.parser")
-        elements = soup.find_all("a", attrs={"aria-label": lambda x: x and x.startswith("Ссылка на объект №")})
+    async def url_parser(session):
         links = []
-        for element in elements:
-            href = element.get("href")
-            href = f"https://realt.by{href}"
-            links.append(href)
+        for i in range(1, 4):
+            url = f"https://realt.by/belarus/sale/flats/?agencyUuids=01036310-5165-11ee-9a2f-abc708f86719&page={i}&seller=false"
+            async with session.get(url) as response:
+                html = await response.text()
+                soup = BeautifulSoup(html, "html.parser")
+                elements = soup.find_all("a", attrs={"aria-label": lambda x: x and x.startswith("Ссылка на объект №")})
+                for element in elements:
+                    href = element.get("href")
+                    href = f"https://realt.by{href}"
+                    links.append(href)
+            print(f'operation {i} complete')
+        return links
 
 
     @staticmethod
-    def object_data_parser(url):
-        url = "https://realt.by/sale-flats/object/3321063/"
-        response = requests.get (url)
-        if response.status_code == 200:
-            soup = BeautifulSoup (response.text, "html.parser")
-            images = soup.find_all ("img")
-            third_links = []
-            for image in images:
-                src = image["src"]
-                if src.startswith("https://static.realt.by/user"):
-                    third_links.append(src)
-            third_links = third_links[::3]
-            print(third_links)
-        else:
-            print (f"Ошибка: не удалось получить данные с {url}")
+    async def get_object_pictures(url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    soup = BeautifulSoup(await response.text(), "html.parser")
+                    images = soup.find_all("img")
+                    third_links = [image["src"] for image in images if image["src"].startswith("https://static.realt.by/user")]
+                    third_links = third_links[::3]
+                    print(third_links)
+                    return third_links
+                else:
+                    print(f"Ошибка: не удалось получить данные с {url}")
+                    return []
 
 
-
-
-        # Заголовок
-        # Импортируем необходимые библиотеки
-        import requests
-        from bs4 import BeautifulSoup
-
-        # Задаем URL-адрес веб-сайта, который хотим парсить
-        url ="https://realt.by/sale-flats/object/3321063/"
-
-        # Отправляем запрос на веб-сайт и получаем ответ
-        response = requests.get(url)
-
-        # Проверяем статус ответа (200 означает успешный запрос)
-        if response.status_code == 200:
-            # Используем BeautifulSoup для разбора HTML-кода
-            soup = BeautifulSoup(response.text, "html.parser")
-
-            # Находим все элементы с тегом <li> и классом "md:w-auto md:inline w-full align-top" на веб-странице
-            list_items = soup.find_all("li", class_="md:w-auto md:inline w-full align-top")
-
-            # Создаем пустой список для хранения текста элементов
-            text_list = []
-
-            # Добавляем текст каждого элемента в список
-            for li in list_items:
-                text_list.append(li.text)
-
-            # Выводим значения из списка через пробел
-            print(" ".join(text_list))
-        else:
-            # Выводим сообщение об ошибке, если запрос не удался
-            print(f"Ошибка: не удалось получить данные с {url}")
-
-
-        # Площади
-        # Импортируем необходимые библиотеки
-        import requests
-        from bs4 import BeautifulSoup
-        # Задаем URL-адрес веб-сайта, который хотим парсить
-        url ="https://realt.by/sale-flats/object/3321063/"
-
-        # Отправляем запрос на веб-сайт и получаем ответ
-        response = requests.get(url)
-
-        # Проверяем статус ответа (200 означает успешный запрос)
-        if response.status_code == 200:
-            # Используем BeautifulSoup для разбора HTML-кода
-            soup = BeautifulSoup(response.text, "html.parser")
-
-            # Находим все элементы с тегом <div> и классом "last:mr-0 pt-6 mr-10" на веб-странице
-            div_items = soup.find_all("div", class_="last:mr-0 pt-6 mr-10")
-
-            # Создаем пустой список для хранения текста элементов
-            text_list = []
-
-            # Добавляем текст каждого элемента в список
-            for div in div_items:
-                text_list.append(div.text)
-
-            # Выводим в консоль текст из списка, разделяя элементы пробелом
-            print(" ".join(text_list))
-        else:
-            # Выводим сообщение об ошибке, если запрос не удался
-            print(f"Ошибка: не удалось получить данные с {url}")
-            
-            
-            
-            
-            
-
-        # Описание
-        # Текст
-        # Импортируем необходимые библиотеки
-        import requests
-        from bs4 import BeautifulSoup
-
-        # Задаем URL-адрес веб-сайта, который хотим парсить
-        url ="https://realt.by/sale-flats/object/3321063/"
-
-        # Отправляем запрос на веб-сайт и получаем ответ
-        response = requests.get(url)
-
-        # Проверяем статус ответа (200 означает успешный запрос)
-        if response.status_code == 200:
-            # Используем BeautifulSoup для разбора HTML-кода
-            soup = BeautifulSoup(response.text, "html.parser")
-
-            # Находим элемент с тегом <section> и классом "bg-white flex flex-wrap md:p-6 my-4 rounded-md" на веб-странице
-            section_item = soup.find("section", class_="bg-white flex flex-wrap md:p-6 my-4 rounded-md")
-
-            # Проверяем, что элемент существует
-            if section_item is not None:
-                # Получаем текст из элемента, используя метод .get_text()
-                text = section_item.get_text()
-
-                # Выводим в консоль текст из элемента
-                print(text)
-            else:
-                # Выводим сообщение, если элемент не найден
-                print("Элемент с тегом <section> и классом 'bg-white flex flex-wrap md:p-6 my-4 rounded-md' не найден на веб-странице")
-        else:
-            # Выводим сообщение об ошибке, если запрос не удался
-            print(f"Ошибка: не удалось получить данные с {url}")
-
-        # Импортируем модуль re
-        import re
-
-        # Задаем регулярное выражение для поиска ссылок
-        # Оно ищет любую последовательность символов, начинающуюся с http:// или https://
-        # и заканчивающуюся символом, который не является буквой, цифрой или знаком подчеркивания (\W)
-        # или концом строки ($)
-        link_pattern = r"https?://\S+\W?"
-
-        # Задаем регулярное выражение для поиска фразы показать больше
-        # Оно ищет точное совпадение с этой фразой, не зависимо от регистра
-        show_more_pattern = r"показать больше"
-
-        # Оборачиваем код в блок try except, чтобы обработать возможные исключения
-        try:
-            # Заменяем найденные ссылки на пустую строку
-            # Функция re.sub принимает три аргумента: шаблон, замена и строка
-            text = re.sub(link_pattern, "", text)
-
-            # Заменяем найденную фразу показать больше на пустую строку
-            text = re.sub(show_more_pattern, "", text, flags=re.IGNORECASE)
-
-            # Выводим обновленный текст
-            print(text)
-        except Exception as e:
-            # Выводим сообщение об ошибке, если что-то пошло не так
-            print(f"Ошибка: {e}")
+    @staticmethod
+    async def get_object_data(url):  # sourcery skip: merge-dict-assign, use-getitem-for-re-match-groups
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    text = await response.text()
+                    soup = BeautifulSoup(text, 'html.parser')
+                    data = {}
+                    data['title'] = soup.find('title').get_text()
+                    elements = soup.find_all(class_='focus:outline-none transition-colors cursor-pointer text-info-500 hover:text-info-600 active:text-info')
+                    data['address'] = {
+                        'region': elements[0].get_text(strip=True),
+                        'city': re.sub(r'\xa0', ' ', elements[1].get_text(strip=True)),
+                        'street': elements[2].get_text(strip=True),
+                        'district': elements[3].get_text(strip=True)
+                    }
+                    elements = soup.find_all(class_='text-h3 font-raleway font-bold flex items-center')
+                    data['area'] = {
+                        'total_area': elements[0].get_text(strip=True),
+                        'living_area': elements[1].get_text(strip=True),
+                        'kitchen_area': elements[2].get_text(strip=True)
+                    }
+                    if match := re.search(r"(\d+)\D+(\d+)", elements[3].get_text(strip=True)):
+                        data['building'] = {
+                            'floor': match.group(1),
+                            'number_storeys': match.group(2)
+                        }
+                    description_divs = soup.find_all('div', class_='description_wrapper__tlUQE')
+                    data['description'] = [div.get_text(separator=' ', strip=True) for div in description_divs]
+                    ul_element = soup.find('ul', class_='w-full -my-1')
+                    div_elements = ul_element.find_all('div', class_='w-1/2') if ul_element else []
+                    elements = [div.get_text(separator=' ', strip=True) for div in div_elements]
+                    data['details'] = {
+                        'number_of_rooms': elements[1],
+                        'separated_rooms': elements[3],
+                        'all_rooms_separated': elements[1] == elements[3],
+                        'year_of_build': elements[11],
+                        'type_of_house': elements[15],
+                        'type_of_layout': elements[17],
+                        'balcony': elements[19],
+                        'type_of_finishing': elements[21],
+                        'ceiling_height': elements[23],
+                        'bathroom': elements[25],
+                        'own_type': elements[27],
+                        'terms_of_sale': elements[29],
+                        'contract_number': elements[31]
+                    }
+                    return data
+                else:
+                    print(f'Ошибка при запросе страницы: статус {response.status}')
+                    return {}
