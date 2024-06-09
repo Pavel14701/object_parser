@@ -18,9 +18,9 @@ async def create_tables():
 
 # Главная асинхронная функция
 async def main():
-    await create_tables() # Создаем таблицы в БД
     async with aiohttp.ClientSession() as session:
         urls = await RealtParser.url_parser(session)
+        print(urls)
         await database.Databases.save_urls_to_db(urls, Session_user_data)  # Сохраняем URL в БД
         # Парсим данные с каждого URL и сохраняем в БД
         tasks = [RealtParser.get_object_data(url, Session_user_data) for url in urls]
